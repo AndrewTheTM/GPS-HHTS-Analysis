@@ -1,6 +1,5 @@
 package org.oki.transmodel.hhtsanalysis;
 
-import java.awt.Point;
 import java.awt.geom.Point2D;
 import java.io.BufferedReader;
 import java.io.File;
@@ -13,14 +12,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
-import com.hexiong.jdbf.DBFWriter;
-import com.hexiong.jdbf.JDBFException;
-import com.hexiong.jdbf.JDBField;
-import com.jhlabs.map.proj.LambertConformalConicProjection;
-import com.jhlabs.map.proj.LambertEqualAreaConicProjection;
 import com.jhlabs.map.proj.Projection;
 import com.jhlabs.map.proj.ProjectionFactory;
-import com.jhlabs.map.proj.TransverseMercatorProjection;
 
 
 public class RunHHTSAnalysis {
@@ -31,7 +24,7 @@ public class RunHHTSAnalysis {
 	static String outputFileName="C:\\Modelrun\\HHTS_GPS\\GPSData.dbf";
 	//static String outputFileName="C:\\Users\\Andrew\\Dropbox\\HHTS GPS\\GPSData.dbf";
 	static int objectID=0;
-	static DBFWriter dbfwriter;
+	
 	
 	public static void main(String[] args) {
 		
@@ -39,49 +32,9 @@ public class RunHHTSAnalysis {
 		 * Process GPS Text Files
 		 */
 		
-		String basepath="C:\\Modelrun\\HHTS_GPS\\";
+		String basepath="C:\\Modelrun\\HHTS_GPS\\"; //TODO: Parameter
 		//String basepath="C:\\Users\\Andrew\\Dropbox\\HHTS GPS\\GPS Data\\";
 		File f= new File(basepath);
-		
-		try {
-			JDBField[] fields={
-				new JDBField("ObjectID",'N',20,0),
-				new JDBField("hhId",'N',20,0),
-				new JDBField("personId",'N',20,0),
-				new JDBField("Longitude",'N',20,10),
-				new JDBField("Latitude",'N',20,10),
-				new JDBField("SpeedKm",'N',20,10), //5
-				new JDBField("CourseDeg",'N',20,10),
-				new JDBField("NumSat",'N',20,0),
-				new JDBField("HDOP",'N',20,10),
-				new JDBField("AltitudeM",'N',20,10),
-				new JDBField("Date",'C',10,0), //10
-				new JDBField("Time",'C',10,0),
-				new JDBField("DistanceM",'N',20,10),
-				new JDBField("TripDate",'D',8,0),
-				new JDBField("X",'N',20,10),
-				new JDBField("Y",'N',20,10), //15
-				new JDBField("TripTimeS",'N',10,0),
-				new JDBField("TimeFPrior",'N',10,0),
-				new JDBField("TimeToNext",'N',10,0),
-				new JDBField("DistPrior",'N',20,10),
-				new JDBField("DistNext",'N',20,10), //20
-				new JDBField("BearPrior",'N',20,10),
-				new JDBField("BearNext",'N',20,10), //22
-				new JDBField("vMPHPrior",'N',20,10),
-				new JDBField("vMPHNext",'N',20,10),
-				new JDBField("vFPSPrior",'N',20,10), //25
-				new JDBField("vFPSNext",'N',20,10),
-				new JDBField("cls100",'N',20,0),
-				new JDBField("cls250",'N',20,0),
-				new JDBField("cls500",'N',20,0) //29
-				//TODO: Acceleration would help here, but this may be too fine a scale to look into it
-				};
-				dbfwriter = new DBFWriter(outputFileName, fields);
-			} catch (JDBFException e1){	
-				e1.printStackTrace();
-			}
-		
 		
 		for(File file:f.listFiles()){
 			GPSList GPS=new GPSList();
@@ -94,20 +47,8 @@ public class RunHHTSAnalysis {
 					e.printStackTrace();
 				}
 			}
-			try {
-				WriteDBF(GPS);
-			} catch (JDBFException e) {
-				e.printStackTrace();
-			}
-			//TODO: Clear all objects to keep from a memory overload.
+			//FIXME: There is a memory overload issue here
 		}
-		try {
-			dbfwriter.close();
-		} catch (JDBFException e) {
-			e.printStackTrace();
-		}
-
-		
 
 		System.out.println("end?");		
 	}
@@ -143,7 +84,10 @@ public class RunHHTSAnalysis {
 			return true;
 	}
 	
-	public static void WriteDBF(GPSList gps) throws JDBFException{
+	public static void WriteDBF(GPSList gps){ 
+		//FIXME: Refactor to something that actrually names what it does.  
+		//TODO: Consider moving this to a different class so it can be multithreaded
+		//FIXME: This runs but does nothing.  It will likely have to save things to the disk
 		
 		
 		for(int j=0;j<gps.size();j++){
@@ -309,7 +253,7 @@ public class RunHHTSAnalysis {
 			record[28]=cluster2;
 			record[29]=cluster3;
 
-			dbfwriter.addRecord(record);
+			//dbfwriter.addRecord(record);
 		}
 		
 		
