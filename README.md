@@ -10,11 +10,7 @@ As far as usability of the data, OKI attempted to use the data for travel model 
 
 ## Programming Work - Current 
 
-The programming work included is initially to process the GPS files that were provided by the subconsultant that performed the GPS analysis.  No data is included in this due to privacy.  It is expected that others have their own raw GPS files to use.
-
-The current status of this is that it will import the GPS files provided to OKI by their consultant team, but with attention given to the fact that this may need to be done by others with different GPS data formats.
-
-This initially started as a project to just write all the GPS data to a DBF file.  However, the DBF file became unwieldly large and that part was removed.  Right now, the process will input GPS files and perform some calculations based on the points.
+The programming work included is initially to process the GPS files that were provided by the subconsultant that performed the GPS analysis.  No data is included in this due to privacy.  It is expected that others have their own raw GPS files to use.  The program imports files, reprojects the data to NAD83 State Plane Ohio South Feet, computes time, speed, heading/bearing, and clustering at 100, 250, and 500 feet.  The data is then saved to the hard drive (this ideally will prevent memory overruns)
 
 ## Programming Work - Envisioned 
 
@@ -26,7 +22,7 @@ The following are tasks that need to be included:
 
 ## Requirements 
 
-This project uses Apache Maven.  
+This project uses Apache Maven.  Note that the author is new to Apache Maven and would be happy with any help or best practices.
 
 ### Installing Maven (Windows 7 Specific) 
 
