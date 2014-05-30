@@ -3,14 +3,26 @@ package org.oki.transmodel.hhtsanalysis;
 import java.awt.geom.Point2D;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
+import java.util.Properties;
+import java.util.TimeZone;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import com.jhlabs.map.proj.Projection;
 import com.jhlabs.map.proj.ProjectionFactory;
@@ -21,33 +33,79 @@ public class RunHHTSAnalysis {
 	/**
 	 * @param args
 	 */
-	static String outputFileName="C:\\Modelrun\\HHTS_GPS\\GPSData.dbf";
+	
+	public static Properties prop;
+	
 	//static String outputFileName="C:\\Users\\Andrew\\Dropbox\\HHTS GPS\\GPSData.dbf";
-	static int objectID=0;
-	
-	
+		
 	public static void main(String[] args) {
+	
+		/*
+		 * Load Properties
+		 */
+		prop=new Properties();
+		InputStream is=null;
+		try {			
+			is=new FileInputStream(args[0]);
+			prop.load(is);
+			is.close();
+			System.out.println("Properties loaded");
+		} catch (IOException e) {
+			System.out.println("Properties file not found.");
+			e.printStackTrace();
+		}
+		
 		
 		/*
 		 * Process GPS Text Files
 		 */
 		
-		String basepath="C:\\Modelrun\\HHTS_GPS\\"; //TODO: Parameter
-		//String basepath="C:\\Users\\Andrew\\Dropbox\\HHTS GPS\\GPS Data\\";
+		String basepath=prop.getProperty("GPSFilePath");
+		String workfolder=prop.getProperty("WorkFolder");
 		File f= new File(basepath);
 		
 		for(File file:f.listFiles()){
 			GPSList GPS=new GPSList();
 			if(file.getName().toLowerCase().endsWith(".dat")){
-			//if(file.getName().toLowerCase().startsWith("100019")){
+			//if(file.getName().toLowerCase().startsWith("100019_001")){
 				System.out.println("Reading "+file.getName());
 				try {
-					GPS.addAll(readGPS(basepath+file.getName()));
+					GPS.addAll(readGPS(basepath+"\\"+file.getName()));
+					
+					List<Future> futuresList=new ArrayList<Future>();
+					int nrOfProcessors=6; //Runtime.getRuntime().availableProcessors()-1; //No, I'm not going to totally drill the computer so much so an MP3 can't play and you can't go screw around on Twitter and Reddit!
+					ExecutorService eservice = Executors.newFixedThreadPool(nrOfProcessors);
+					
+					for(int i=0;i<GPS.size();i++){
+						futuresList.add(eservice.submit(new ProcessGPS(i,GPS)));
+					}
+
+					GPSList newGPSList=new GPSList();
+					Object taskResult;
+					for(Future future:futuresList){
+						try{
+							taskResult=future.get();
+							if(taskResult instanceof GPSData)
+								newGPSList.add((GPSData) taskResult);
+						}catch(InterruptedException e){
+							e.printStackTrace();
+						}catch(ExecutionException e){
+							e.printStackTrace();
+						}finally{
+							eservice.shutdown();
+						}
+					}
+					
+					FileOutputStream fout=new FileOutputStream(workfolder+"\\"+newGPSList.get(0).hhId+"_"+newGPSList.get(0).personId+".obj");
+					ObjectOutputStream oos=new ObjectOutputStream(fout);
+					oos.writeObject(newGPSList);
+					oos.close();
+					GPS.clear();
+					newGPSList.clear();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}
-			//FIXME: There is a memory overload issue here
 		}
 
 		System.out.println("end?");		
@@ -83,183 +141,6 @@ public class RunHHTSAnalysis {
 		else
 			return true;
 	}
-	
-	public static void WriteDBF(GPSList gps){ 
-		//FIXME: Refactor to something that actrually names what it does.  
-		//TODO: Consider moving this to a different class so it can be multithreaded
-		//FIXME: This runs but does nothing.  It will likely have to save things to the disk
-		
-		
-		for(int j=0;j<gps.size();j++){
-			Object[] record = null;
-			record=new Object[30];
-			record[0]=objectID;
-			objectID+=1;
-			for(int i=1; i<14;i++){
-				record[i]=gps.get(j).toArray()[i-1];
-			}
-			/*
-			 * Derived Fields
-			 */
-		
-			// State Plane X/Y		
-			String[] params={
-				"+proj=lcc",
-				"+lat_1=40.03333333333333",
-				"+lat_2=38.73333333333333",
-				"+lat_0=38",
-				"+lon_0=-82.5",
-				"+x_0=600000",
-				"+y_0=0",
-				"+ellps=GRS80",
-				"+datum=NAD83",
-				"+to_meter=0.3048006096012192",
-				"+no_defs"}; 
-			
-			Projection nad83spos = ProjectionFactory.fromPROJ4Specification(params);
-			Point2D.Double proj = nad83spos.transform(gps.get(j).Longitude, gps.get(j).Latitude, new Point2D.Double());
-			record[14]=proj.x; //X
-			record[15]=proj.y; //Y
-			
-			record[16]=gps.get(j).TripDateTime.getHours()*3600+gps.get(j).TripDateTime.getMinutes()*60+gps.get(j).TripDateTime.getSeconds();
-			
-			/*
-			 * Comparisons with prior
-			 */
-			if(j>0 && gps.get(j-1).hhId==gps.get(j).hhId && (gps.get(j-1).Date.equals(gps.get(j).Date) || 
-					(gps.get(j-1).TripDateTime.getHours()==gps.get(j).TripDateTime.getHours() && gps.get(j-1).TripDateTime.getMinutes()-gps.get(j).TripDateTime.getMinutes()<30))){
-				//Difference in time from prior point
-				record[17]=(gps.get(j).TripDateTime.getHours()*3600+gps.get(j).TripDateTime.getMinutes()*60+gps.get(j).TripDateTime.getSeconds())-(gps.get(j-1).TripDateTime.getHours()*3600+gps.get(j-1).TripDateTime.getMinutes()*60+gps.get(j-1).TripDateTime.getSeconds());
-				
-				//Distance from prior point
-				Point2D.Double prior=nad83spos.transform(gps.get(j-1).Longitude, gps.get(j-1).Latitude, new Point2D.Double());
-				record[19]=Math.sqrt(Math.pow(prior.x-proj.x, 2)+Math.pow(prior.y-proj.y, 2));
-				
-				//Trajectory from prior point (comparison in location from the prior point)
-				double angle=(Math.atan((proj.y-prior.y)/(proj.x-prior.x)))*180/Math.PI;
-				double heading=0;
-				if(proj.x-prior.x<0) heading=270-angle; 
-				else if(proj.x-prior.x>0) heading=90-angle; 
-				else if(proj.y-prior.y>0) heading=0; 
-				else if(proj.y-prior.y<0) heading=180;
-				record[21]=heading;
-				
-				if(((Integer) record[17])!=0)
-					record[25]=((Double)record[19])/((Integer) record[17]).doubleValue(); //vFPS Prior
-				else
-					record[25]=0;
-				
-				if(record[25] instanceof Double)
-					record[23]=1.466667*((Double)record[25]); //vMPH Prior	
-				else if(record[25] instanceof Integer)
-					record[23]=1.466667*((Integer)record[25]).doubleValue();
-			}
-			/*
-			 * Comparisons with next
-			 */
-			if(j+1<gps.size() && gps.get(j+1).hhId==gps.get(j).hhId && (gps.get(j+1).Date.equals(gps.get(j).Date) || 
-					(gps.get(j+1).TripDateTime.getHours()==gps.get(j).TripDateTime.getHours() && gps.get(j+1).TripDateTime.getMinutes()-gps.get(j).TripDateTime.getMinutes()<30))){
-				//Time to next point
-				record[18]=(gps.get(j+1).TripDateTime.getHours()*3600+gps.get(j+1).TripDateTime.getMinutes()*60+gps.get(j+1).TripDateTime.getSeconds())-(gps.get(j).TripDateTime.getHours()*3600+gps.get(j).TripDateTime.getMinutes()*60+gps.get(j).TripDateTime.getSeconds());
-				
-				//Distance to next point
-				Point2D.Double next=nad83spos.transform(gps.get(j+1).Longitude, gps.get(j+1).Latitude, new Point2D.Double());
-				record[20]=Math.sqrt(Math.pow(next.x-proj.x, 2)+Math.pow(next.y-proj.y, 2));
-				
-				//Trajectory to next point
-				double angle=Math.atan((next.y-proj.y)/(next.x-proj.x))*180/Math.PI;
-				double heading=0;
-				if(next.x-proj.x<0) heading=270-angle;
-				else if(next.x-proj.x>0) heading=90-angle;
-				else if(next.y-proj.y>0) heading=0;
-				else if(next.y-proj.y<0) heading=180;
-				record[22]=heading;
-				
-				if(((Integer) record[18])!=0)
-					record[26]=((Double)record[20]).doubleValue()/((Integer)record[18]).doubleValue(); //vFPS Prior
-				else
-					record[26]=0;
-				
-				if(record[26] instanceof Double)
-					record[24]=1.466667*((Double)record[26]); //vMPH Next
-				else if(record[26] instanceof Integer)
-					record[24]=1.466667*((Integer)record[26]).doubleValue();
-	
-			}
-			
-			/*
-			 * Clusters ... numbers within x feet (using 100, 250, and 500 right now)
-			 */
-			
-			//Looking back until out of circle
-			int cluster1=0;
-			int cluster2=0;
-			int cluster3=0;
-			for(int jj=j-1;jj>0;jj--){
-				Point2D.Double p=nad83spos.transform(gps.get(jj).Longitude, gps.get(jj).Latitude, new Point2D.Double());
-				if(10000-Math.pow(p.x-proj.x,2)>0){
-					double y1=proj.y+Math.sqrt(10000-Math.pow(p.x-proj.x,2));
-					double y2=proj.y-Math.sqrt(10000-Math.pow(p.x-proj.x,2));
-					if(p.y<=y1 && p.y>=y2)
-						cluster1++;
-				}
-				
-				if(62500-Math.pow(p.x-proj.x,2)>0){
-					double y1=proj.y+Math.sqrt(62500-Math.pow(p.x-proj.x,2));
-					double y2=proj.y-Math.sqrt(62500-Math.pow(p.x-proj.x,2));
-					if(p.y<=y1 && p.y>=y2)
-						cluster2++;
-				}
-				if(250000-Math.pow(p.x-proj.x,2)<=0)
-					break;
-				
-				if(250000-Math.pow(p.x-proj.x,2)>0){
-					double y1=proj.y+Math.sqrt(250000-Math.pow(p.x-proj.x,2));
-					double y2=proj.y-Math.sqrt(250000-Math.pow(p.x-proj.x,2));
-					if(p.y<=y1 && p.y>=y2)
-						cluster3++;
-				}
-				
-			}
-			
-			for(int jj=j+1;jj<gps.size();jj++){
-				Point2D.Double p=nad83spos.transform(gps.get(jj).Longitude, gps.get(jj).Latitude, new Point2D.Double());
-				if(10000-Math.pow(p.x-proj.x,2)>0){
-					double y1=proj.y+Math.sqrt(10000-Math.pow(p.x-proj.x,2));
-					double y2=proj.y-Math.sqrt(10000-Math.pow(p.x-proj.x,2));
-					if(p.y<=y1 && p.y>=y2)
-						cluster1++;
-				}
-				
-				if(62500-Math.pow(p.x-proj.x,2)>0){
-					double y1=proj.y+Math.sqrt(62500-Math.pow(p.x-proj.x,2));
-					double y2=proj.y-Math.sqrt(62500-Math.pow(p.x-proj.x,2));
-					if(p.y<=y1 && p.y>=y2)
-						cluster2++;
-				}
-				
-				if(250000-Math.pow(p.x-proj.x,2)<=0)
-					break;
-				
-				if(250000-Math.pow(p.x-proj.x,2)>0){
-					double y1=proj.y+Math.sqrt(250000-Math.pow(p.x-proj.x,2));
-					double y2=proj.y-Math.sqrt(250000-Math.pow(p.x-proj.x,2));
-					if(p.y<=y1 && p.y>=y2)
-						cluster3++;
-				}
-				
-			}
-			record[27]=cluster1;
-			record[28]=cluster2;
-			record[29]=cluster3;
-
-			//dbfwriter.addRecord(record);
-		}
-		
-		
-				 
-		
-	}
 
 	public static GPSList readGPS(String fileName) throws IOException{
 		int hhID=0, personID=0;
@@ -279,8 +160,11 @@ public class RunHHTSAnalysis {
 		Path path=Paths.get(fileName);
 		try(BufferedReader reader=Files.newBufferedReader(path,StandardCharsets.UTF_8)){
 			String line=null;
+			int sort=1;
 			while((line=reader.readLine())!=null){
 				GPSData newData=new GPSData();
+				newData.sort=sort;
+				sort++;
 				newData.hhId=hhID;
 				newData.personId=personID;
 				if((!(line.substring(0, "Longitude".length()).equalsIgnoreCase("Longitude")) && (line.indexOf(",")>0))){
@@ -293,21 +177,50 @@ public class RunHHTSAnalysis {
 						newData.NumSat=Integer.parseInt(splitLine[4]);
 						newData.HDOP=Double.parseDouble(splitLine[5]);
 						newData.AltitudeM=Double.parseDouble(splitLine[6]);
-						newData.Date=splitLine[7];
-						newData.Time=splitLine[8];
 						newData.DistanceM=Double.parseDouble(splitLine[9]);
-						SimpleDateFormat df=new SimpleDateFormat("dd/M/yyyy hh:mm:ss");
+						SimpleDateFormat df=new SimpleDateFormat("dd/M/yyyy H:m:ss z"); 
+						
+						// State Plane X/Y		
+						String[] params={
+							"+proj=lcc",
+							"+lat_1=40.03333333333333",
+							"+lat_2=38.73333333333333",
+							"+lat_0=38",
+							"+lon_0=-82.5",
+							"+x_0=600000",
+							"+y_0=0",
+							"+ellps=GRS80",
+							"+datum=NAD83",
+							"+to_meter=0.3048006096012192",
+							"+no_defs"}; 
+						Projection nad83spos = ProjectionFactory.fromPROJ4Specification(params);
+						Point2D.Double proj = nad83spos.transform(newData.Longitude, newData.Latitude, new Point2D.Double());
+						newData.X=proj.x; //X
+						newData.Y=proj.y; //Y
 						try {
-							newData.TripDateTime=df.parse(newData.Date+" "+newData.Time);
+							newData.TripDateTime=df.parse(splitLine[7]+" "+splitLine[8]+" GMT");
+							
 							Calendar c=Calendar.getInstance();
+							TimeZone tz=TimeZone.getTimeZone("US/Eastern");
+							c.setTimeZone(tz);
 							c.setTime(newData.TripDateTime);
+							newData.Seconds=c.getTime().getHours()*3600+c.getTime().getMinutes()*60+c.getTime().getSeconds();
+							if(newData.TripDateTime!=null){
+								SimpleDateFormat dateOnly=new SimpleDateFormat("M/dd/yyyy");
+								SimpleDateFormat timeOnly=new SimpleDateFormat("H:mm:ss");
+								
+								newData.Date=dateOnly.format(newData.TripDateTime);
+								newData.Time=timeOnly.format(newData.TripDateTime);
+							}
+							
 							if(c.get(Calendar.DAY_OF_WEEK)>1 && c.get(Calendar.DAY_OF_WEEK)<7)
-								output.add(newData);
+								if(newData.HDOP<5 && newData.NumSat>2)
+									output.add(newData);
 							else
 								newData=null;
 						} catch (ParseException e) {
 							e.printStackTrace();
-						}						
+						}				
 					}
 				}			
 			}
