@@ -136,7 +136,6 @@ public class RunHHTSAnalysis {
 					//Object2CSV w=new Object2CSV();
 					//w.writeCSV(newGPSList, workfolder+"\\"+newGPSList.get(0).hhId+"_"+newGPSList.get(0).personId+".csv");
 					
-					//    \\ //    \\ //    \\ //    \\ //     \\
 					FileOutputStream fout=new FileOutputStream(workfolder+"\\"+newGPSList.get(0).hhId+"_"+newGPSList.get(0).personId+".obj");
 					ObjectOutputStream oos=new ObjectOutputStream(fout);
 					oos.writeObject(newGPSList);
