@@ -6,51 +6,70 @@ import java.util.Date;
 public class GPSData implements Serializable{
 	private static final long serialVersionUID = 4849233457585996248L;
 	// Filename Variables
-	int sort;
-	int hhId;
-	int personId;
+	public int sort;
+	public int hhId;
+	public int personId;
 	// CSV items... in order
-	double Longitude;
-	double Latitude;
-	double SpeedKm;
-	double CourseDeg;
-	int NumSat;
-	double HDOP;
-	double AltitudeM;
-	String Date;
-	String Time;
-	double DistanceM;
-	Date TripDateTime;
-	int Seconds;
+	public double Longitude;
+	public double Latitude;
+	public double SpeedKm;
+	public double CourseDeg;
+	public int NumSat;
+	public double HDOP;
+	public double AltitudeM;
+	public String Date;
+	public String Time;
+	public double DistanceM;
+	public Date TripDateTime;
+	public int Seconds;
 	
 	// Trip Table Fields
-		int DayId;
-		int TravelDay;
-		int TripId;
-		
-		// Derived fields
-		double X;
-		double Y;
-		
-		double timePrior;
-		double distPrior;
-		double velocityPriorFPS;
-		double velocityPriorMPH;
-		double headingPrior;
-		
-		
-		double timeNext;
-		double distNext;
-		double velocityNextFPS;
-		double velocityNextMPH;
-		double headingNext;
-		
-		double cDist;
-		double cTime;
-		
-		int cluster100;
-		int cluster250;
-		int cluster500;
+	public int DayId;
+	public int TravelDay;
+	public int TripId;
+	
+	// Derived fields
+	public double initX;
+	public double initY;
+	public double smoothX;
+	public double smoothY;
+	
+	public double X;
+	public double Y;
+	
+	public double timePrior;
+	public double distPrior;
+	public double velocityPriorFPS;
+	public double velocityPriorMPH;
+	public double headingPrior;
+	
+	
+	public double timeNext;
+	public double distNext;
+	public double velocityNextFPS;
+	public double velocityNextMPH;
+	public double headingNext;
+	
+	public double cDist;
+	public double cTime;
+	
+	public int cluster100;
+	public int cluster250;
+	public int cluster500;
+	
+	// Trip End Computation Items
+	boolean moving; //initialized to true
+	private int tripID; //WARNING: Making this public can screw up exporting to database formats!
+	public int stopID;
+	private int speedTE;
+	private int clusterTE;
+	
+	
+	GPSData(){
+		moving=true;
+		speedTE=0;
+		clusterTE=0;
+	}
 	
 	public Object[] toArray(){
 		Object out[]={this.hhId,this.personId,this.Longitude,this.Latitude,this.SpeedKm,this.CourseDeg,

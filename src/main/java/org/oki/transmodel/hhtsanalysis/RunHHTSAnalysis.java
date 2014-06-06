@@ -35,8 +35,6 @@ public class RunHHTSAnalysis {
 	 */
 	
 	public static Properties prop;
-	
-	//static String outputFileName="C:\\Users\\Andrew\\Dropbox\\HHTS GPS\\GPSData.dbf";
 		
 	public static void main(String[] args) {
 	
@@ -72,6 +70,7 @@ public class RunHHTSAnalysis {
 				try {
 					GPS.addAll(readGPS(basepath+"\\"+file.getName()));
 					
+					// GPS Data Processing - speeds, times, bearings, etc.
 					List<Future> futuresList=new ArrayList<Future>();
 					int nrOfProcessors=6; //Runtime.getRuntime().availableProcessors()-1; //No, I'm not going to totally drill the computer so much so an MP3 can't play and you can't go screw around on Twitter and Reddit!
 					ExecutorService eservice = Executors.newFixedThreadPool(nrOfProcessors);
@@ -80,11 +79,17 @@ public class RunHHTSAnalysis {
 						futuresList.add(eservice.submit(new ProcessGPS(i,GPS)));
 					}
 
+					int counter=0;
+					int size=GPS.size();
+					System.out.println("GPS Processing...");
 					GPSList newGPSList=new GPSList();
 					Object taskResult;
 					for(Future future:futuresList){
 						try{
 							taskResult=future.get();
+							counter++;
+							if(counter%1000==0)
+								System.out.println("Working on "+counter+" of "+size+"...");
 							if(taskResult instanceof GPSData)
 								newGPSList.add((GPSData) taskResult);
 						}catch(InterruptedException e){
@@ -96,6 +101,42 @@ public class RunHHTSAnalysis {
 						}
 					}
 					
+					GPS=newGPSList;
+					newGPSList=new GPSList();
+					System.out.println("Completed GPS Processing.");
+					
+					// GPS Smoothing
+					//if...
+					futuresList=new ArrayList<Future>();
+					eservice=Executors.newFixedThreadPool(nrOfProcessors);
+					for(int i=0;i<GPS.size();i++){
+						futuresList.add(eservice.submit(new GaussianKernel(i,GPS)));
+					}
+					
+					System.out.println("GPS Smoothing...");
+					counter=0;
+					for(Future future:futuresList){
+						try{
+							taskResult=future.get();
+							counter++;
+							if(taskResult instanceof GPSData)
+								newGPSList.add((GPSData) taskResult);
+							if(counter%1000==0)
+								System.out.println("Working on "+counter+" of "+size+"...");
+						}catch(InterruptedException e){
+							e.printStackTrace();
+						}catch(ExecutionException e){
+							e.printStackTrace();
+						}finally{
+							eservice.shutdown();
+						}
+					}
+					System.out.println("Completed GPS Smoothing.");
+					
+					//Object2CSV w=new Object2CSV();
+					//w.writeCSV(newGPSList, workfolder+"\\"+newGPSList.get(0).hhId+"_"+newGPSList.get(0).personId+".csv");
+					
+					//    \\ //    \\ //    \\ //    \\ //     \\
 					FileOutputStream fout=new FileOutputStream(workfolder+"\\"+newGPSList.get(0).hhId+"_"+newGPSList.get(0).personId+".obj");
 					ObjectOutputStream oos=new ObjectOutputStream(fout);
 					oos.writeObject(newGPSList);
@@ -195,8 +236,14 @@ public class RunHHTSAnalysis {
 							"+no_defs"}; 
 						Projection nad83spos = ProjectionFactory.fromPROJ4Specification(params);
 						Point2D.Double proj = nad83spos.transform(newData.Longitude, newData.Latitude, new Point2D.Double());
-						newData.X=proj.x; //X
-						newData.Y=proj.y; //Y
+						newData.initX=proj.x; //X
+						newData.initY=proj.y; //Y
+						
+						if(Boolean.getBoolean((String) RunHHTSAnalysis.prop.get("SmoothGPS"))==false){
+							newData.X=proj.x;
+							newData.Y=proj.y;
+						}
+
 						try {
 							newData.TripDateTime=df.parse(splitLine[7]+" "+splitLine[8]+" GMT");
 							

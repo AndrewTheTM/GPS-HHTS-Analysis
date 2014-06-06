@@ -1,10 +1,6 @@
 package org.oki.transmodel.hhtsanalysis;
 
-import java.awt.geom.Point2D;
 import java.util.concurrent.Callable;
-
-import com.jhlabs.map.proj.Projection;
-import com.jhlabs.map.proj.ProjectionFactory;
 
 public class ProcessGPS implements Callable {
 
@@ -19,7 +15,11 @@ public class ProcessGPS implements Callable {
 	}
 	
 	@Override
-	public Object call() throws Exception {		
+	public Object call() throws Exception {
+		/*
+		 * NOTE: Requires X and Y to be set.
+		 */
+		
 		/*
 		 * Comparisons with prior
 		 */
