@@ -22,7 +22,7 @@ public class Object2CSV {
 			e2.printStackTrace();
 		}
 		try (BufferedWriter writer=Files.newBufferedWriter(path, StandardCharsets.UTF_8)){
-			Class c=g.get(0).getClass();
+			Class<? extends GPSData> c=g.get(0).getClass();
 			String line="";
 			for(Field f:c.getDeclaredFields()){
 				if(Modifier.isPublic(f.getModifiers()))

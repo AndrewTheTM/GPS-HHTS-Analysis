@@ -1,8 +1,9 @@
 package org.oki.transmodel.hhtsanalysis;
 
+import java.util.Calendar;
 import java.util.concurrent.Callable;
 
-public class ProcessGPS implements Callable {
+public class ProcessGPS implements Callable<GPSData> {
 
 	GPSData gpsRecord;
 	GPSList gpsData;
@@ -15,7 +16,7 @@ public class ProcessGPS implements Callable {
 	}
 	
 	@Override
-	public Object call() throws Exception {
+	public GPSData call() throws Exception {
 		/*
 		 * NOTE: Requires X and Y to be set.
 		 */
@@ -23,11 +24,40 @@ public class ProcessGPS implements Callable {
 		/*
 		 * Comparisons with prior
 		 */
+		Calendar c=Calendar.getInstance();
+		c.setTime(gpsData.get(j).TripDateTime);
+		int currHour=c.get(Calendar.HOUR_OF_DAY);
+		int currMin=c.get(Calendar.MINUTE);
+		int currSec=c.get(Calendar.SECOND);
+		
+		int priorHour=0;
+		int priorMin=0;
+		int priorSec=0;
+		if(j>0){
+			Calendar c2=Calendar.getInstance();
+			c2.setTime(gpsData.get(j-1).TripDateTime);
+			priorHour=c2.get(Calendar.HOUR_OF_DAY);
+			priorMin=c2.get(Calendar.MINUTE);
+			priorSec=c2.get(Calendar.SECOND);
+		}
+		int nextHour=0;
+		int nextMin=0;
+		int nextSec=0;
+		if(j+1<gpsData.size()){
+			Calendar c3=Calendar.getInstance();
+			c3.setTime(gpsData.get(j+1).TripDateTime);
+			nextHour=c3.get(Calendar.HOUR_OF_DAY);
+			nextMin=c3.get(Calendar.MINUTE);
+			nextSec=c3.get(Calendar.SECOND);
+		}
+		
+		
+		
 		if(j>0 && gpsData.get(j-1).hhId==gpsData.get(j).hhId && (gpsData.get(j-1).Date.equals(gpsData.get(j).Date) || 
-				(gpsData.get(j-1).TripDateTime.getHours()==gpsData.get(j).TripDateTime.getHours() && gpsData.get(j-1).TripDateTime.getMinutes()-gpsData.get(j).TripDateTime.getMinutes()<30))){
+				(priorHour==currHour && priorMin-currMin<30))){
 			
 			//Difference in time from prior point
-			gpsRecord.timePrior=(gpsData.get(j).TripDateTime.getHours()*3600+gpsData.get(j).TripDateTime.getMinutes()*60+gpsData.get(j).TripDateTime.getSeconds())-(gpsData.get(j-1).TripDateTime.getHours()*3600+gpsData.get(j-1).TripDateTime.getMinutes()*60+gpsData.get(j-1).TripDateTime.getSeconds());
+			gpsRecord.timePrior=(currHour*3600+currMin*60+currSec)-(priorHour*3600+priorMin*60+priorSec);
 			
 			//Distance from prior point
 			gpsRecord.distPrior=Math.sqrt(Math.pow(gpsData.get(j-1).X-gpsData.get(j).X, 2)+Math.pow(gpsData.get(j-1).Y-gpsData.get(j).Y, 2));
@@ -50,9 +80,9 @@ public class ProcessGPS implements Callable {
 		 * Comparisons with next
 		 */
 		if(j+1<gpsData.size() && gpsData.get(j+1).hhId==gpsData.get(j).hhId && (gpsData.get(j+1).Date.equals(gpsData.get(j).Date) || 
-				(gpsData.get(j+1).TripDateTime.getHours()==gpsData.get(j).TripDateTime.getHours() && gpsData.get(j+1).TripDateTime.getMinutes()-gpsData.get(j).TripDateTime.getMinutes()<30))){
+				(nextHour==currHour && nextMin-currMin<30))){
 			//Time to next point
-			gpsRecord.timeNext=(gpsData.get(j+1).TripDateTime.getHours()*3600+gpsData.get(j+1).TripDateTime.getMinutes()*60+gpsData.get(j+1).TripDateTime.getSeconds())-(gpsData.get(j).TripDateTime.getHours()*3600+gpsData.get(j).TripDateTime.getMinutes()*60+gpsData.get(j).TripDateTime.getSeconds());
+			gpsRecord.timeNext=(nextHour*3600+nextMin*60+nextSec)-(currHour*3600+currMin*60+currSec);
 			
 			//Distance to next point
 			gpsRecord.distNext=Math.sqrt(Math.pow(gpsData.get(j+1).X-gpsData.get(j).X, 2)+Math.pow(gpsData.get(j+1).Y-gpsData.get(j).Y, 2));

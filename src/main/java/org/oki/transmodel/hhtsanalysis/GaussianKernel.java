@@ -1,6 +1,5 @@
 package org.oki.transmodel.hhtsanalysis;
 
-import java.util.ArrayList;
 import java.util.concurrent.Callable;
 
 /**
@@ -10,7 +9,7 @@ import java.util.concurrent.Callable;
  * Notes:
  * Used adaptation of code from http://trac.matsim.org/browser/svn/matsim/trunk/src/playground/scnadine/gpsProcessing/coordAlgorithms/GPSCoordGaussSmoothing.java?rev=4478
  */
-public class GaussianKernel implements Callable{
+public class GaussianKernel implements Callable<GPSData>{
 	
 	GPSList GPSData;
 	int j;
@@ -23,7 +22,7 @@ public class GaussianKernel implements Callable{
 	}
 	
 	@Override
-	public Object call() throws Exception {
+	public GPSData call() throws Exception {
 		double kernelBandwidth=Double.parseDouble(RunHHTSAnalysis.prop.get("KernelBandwidth").toString());
 		double sigXweight=0;
 		double sigYweight=0;
@@ -31,9 +30,9 @@ public class GaussianKernel implements Callable{
 		
 		// Search backwards
 		if(j>0){
-			for(int jj=j;jj>0;jj--){
-				if(Math.abs(GPSData.get(j).Seconds-GPSData.get(jj).Seconds)<=kernelBandwidth/2*3){
-					double weight=Math.exp(-Math.pow(GPSData.get(j).Seconds-GPSData.get(jj).Seconds,2)/(2*Math.pow(kernelBandwidth/2,2)));
+			for(int jj=j-1;jj>Math.max(0, j-16);jj--){ 
+				if(Math.abs(GPSData.get(j).Seconds-GPSData.get(jj).Seconds)<=kernelBandwidth/2*3 && GPSData.get(j).Date.equals(GPSData.get(jj).Date)){
+					double weight=Math.exp(-1*(Math.pow(GPSData.get(j).Seconds-GPSData.get(jj).Seconds,2)/(2*Math.pow(kernelBandwidth/2,2))));
 					sigXweight+=(weight*GPSData.get(jj).initX);
 					sigYweight+=(weight*GPSData.get(jj).initY);
 					sigWeight+=weight;
@@ -41,9 +40,9 @@ public class GaussianKernel implements Callable{
 			}
 		}
 		// Search forward
-		for(int jj=j;jj<GPSData.size();jj++){
-			if(Math.abs(GPSData.get(jj).Seconds-GPSData.get(j).Seconds)<=kernelBandwidth/2*3){
-				double weight=Math.exp(-Math.pow(GPSData.get(j).Seconds-GPSData.get(jj).Seconds,2)/(2*Math.pow(kernelBandwidth/2,2)));
+		for(int jj=j+1;jj<Math.min(GPSData.size(),j+16);jj++){
+			if(Math.abs(GPSData.get(jj).Seconds-GPSData.get(j).Seconds)<=kernelBandwidth/2*3 && GPSData.get(j).Date.equals(GPSData.get(jj).Date)){
+				double weight=Math.exp(-1*(Math.pow(GPSData.get(j).Seconds-GPSData.get(jj).Seconds,2)/(2*Math.pow(kernelBandwidth/2,2))));
 				sigXweight+=(weight*GPSData.get(jj).initX);
 				sigYweight+=(weight*GPSData.get(jj).initY);
 				sigWeight+=weight;
@@ -51,6 +50,8 @@ public class GaussianKernel implements Callable{
 		}
 		GPSRecord.smoothX=sigXweight/sigWeight;
 		GPSRecord.smoothY=sigYweight/sigWeight;
+		GPSRecord.X=GPSRecord.smoothX;
+		GPSRecord.Y=GPSRecord.smoothY;
 		
 		return GPSRecord;
 	}

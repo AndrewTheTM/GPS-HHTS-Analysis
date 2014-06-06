@@ -1,28 +1,28 @@
 package org.oki.transmodel.hhtsanalysis;
 
-public class LocateTripEnds {
+import java.util.concurrent.Callable;
+
+public class LocateTripEnds implements Callable<GPSData>{
 	GPSList GPSData;
-	LocateTripEnds(GPSList g){
-		GPSData=g;
-		int countStopped=0;
-		int countDensity=0;
-		for(GPSData gd:g){
-			if(gd.velocityPriorFPS<0.032808399)  // 0.032808399 fps = 1 m/s
-				countStopped++;
-			else
-				countStopped=0;
-			
-			//TODO: The next needs to see if 2/3 of the points are within a cluster for 10 points or 300 seconds
-			if(gd.cluster100>15)
-				countDensity++;
-			
-			if(countStopped>=120)
-				gd.moving=false;
-			else if(countDensity>10)
-				gd.moving=false;
-			
-			
-		}
+	int j;
+	
+	LocateTripEnds(GPSList GPS, int j){
+		this.j=j;
+		this.GPSData=GPS;
+	}
+
+	@Override
+	public org.oki.transmodel.hhtsanalysis.GPSData call() throws Exception {
+		GPSData GPS=GPSData.get(j);
+		
+		
+		if(GPSData.get(j).velocityNextFPS<0.032808399)
+			GPS.moving=false;
+		
+		//TODO: Loop for next 300 seconds to see if cluster100>15
+		
+		
+		return GPS;
 	}
 	
 }
