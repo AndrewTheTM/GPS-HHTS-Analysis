@@ -38,7 +38,8 @@ The following are tasks that need to be included:
 
 ## Requirements 
 
-This project uses Apache Maven.  Note that the author is new to Apache Maven and would be happy with any help or best practices.
+This project uses Apache Maven.  Note that the author is new to Apache Maven and would be happy with any help or best 
+practices.
 
 ### Installing Maven (Windows 7 Specific) 
 
@@ -54,3 +55,9 @@ This is licensed under the Apache 2.0 License.  See the LICENSE.txt file include
 ## References
 
 [1] Schuessler, N., and K. W. Axhausen. "Processing GPS Raw Data Without Additional Information". TRB 2009.
+
+[C] Huxtable, Jerry. JH Labs Projection Library. http://www.jhlabs.com/java/maps/proj/index.html.  Licensed under 
+Apache License 2.0.
+
+[C] Hexiong?.  JDBF Java reader and writer library for DBF database files. https://code.google.com/p/jdbf/.  Licensed 
+under Apache License 2.0.

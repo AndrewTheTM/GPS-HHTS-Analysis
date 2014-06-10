@@ -24,6 +24,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import com.hexiong.jdbf.JDBFException;
 import com.jhlabs.map.proj.Projection;
 import com.jhlabs.map.proj.ProjectionFactory;
 
@@ -52,6 +53,18 @@ public class RunHHTSAnalysis {
 		} catch (IOException e) {
 			System.out.println("Properties file not found.");
 			e.printStackTrace();
+		}
+		
+		/*
+		 * Read Locations
+		 */
+		ArrayList<Locations> Locations=new ArrayList<Locations>();
+		
+		ReadDBF rdbf=new ReadDBF(prop.getProperty("LocationTable"));
+		try {
+			Locations=rdbf.ReadLocations();
+		} catch (JDBFException e1) {
+			e1.printStackTrace();
 		}
 		
 		
@@ -164,10 +177,48 @@ public class RunHHTSAnalysis {
 							eservice.shutdown();
 						}
 					}
+					System.out.println("Completed Round 1 Trip End Processing.  Round 2...");	
 					
+					GPS=newGPSList;
+					newGPSList=new GPSList();
+					eservice = Executors.newFixedThreadPool(nrOfProcessors);
+					futuresList=new ArrayList<Future>();
+					for(int i=0;i<GPS.size();i++)
+						futuresList.add(eservice.submit(new LocateStops(GPS,i)));
+					counter=0;
+					for(Future future:futuresList){
+						try{
+							taskResult=future.get();
+							counter++;
+							if(counter%1000==0)
+								System.out.println("Working on "+counter+" of "+size+"...");
+							if(taskResult instanceof GPSData)
+								newGPSList.add((GPSData) taskResult);
+						}catch(InterruptedException e){
+							e.printStackTrace();
+						}catch(ExecutionException e){
+							e.printStackTrace();
+						}finally{
+							eservice.shutdown();
+						}
+					}
+					System.out.println("Completed Round 2 Trip End Processing.  Outputting...");
 					
+					/*
+					 * Tagging stops for an eventual trip table
+					 */
 					
-					// TODO: see if moving==false for 120 seconds
+					/*
+					 * TODO:
+					 * 0. Compute duration of visit, time to get there, and time to next destination.
+					 * 1. Aggregate and weight stops...
+					 * 		How is this done?  Weighted from middle point?  Average X&Y of all points?
+					 * 2. Check distance to known locations from the location table
+					 * 		This means that the location table needs to be good.  Can GIS re-geocode it?
+					 * 3. Check frequency of locations for HH
+					 * 		Do people go there often, or just once?
+					 * 		If same person often, is it their work?
+					 */
 					
 					
 					FileOutputStream fout=new FileOutputStream(workfolder+"\\"+newGPSList.get(0).hhId+"_"+newGPSList.get(0).personId+".obj");

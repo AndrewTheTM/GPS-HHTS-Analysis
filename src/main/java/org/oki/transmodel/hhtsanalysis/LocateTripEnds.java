@@ -19,6 +19,16 @@ public class LocateTripEnds implements Callable<GPSData>{
 		if(GPSData.get(j).velocityNextFPS<0.032808399)
 			GPS.moving=false;
 		
+		if(GPSData.get(j).cluster100>20)
+			GPS.moving=false;
+		
+//		int jj=0;
+//		while(jj<GPSData.size()){
+//			for(jj=j;jj<j+30;jj++){
+//				
+//			}
+//		}
+		
 		//TODO: Loop for next 300 seconds to see if cluster100>15
 		
 		

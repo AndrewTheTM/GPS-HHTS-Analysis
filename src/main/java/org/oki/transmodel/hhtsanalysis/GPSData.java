@@ -59,6 +59,7 @@ public class GPSData implements Serializable{
 	
 	// Trip End Computation Items
 	boolean moving; //initialized to true
+	public boolean isStop; //initialized to false
 	public int newTripID;
 	public int stopID;
 	public int speedTE;
@@ -67,6 +68,7 @@ public class GPSData implements Serializable{
 	
 	GPSData(){
 		moving=true;
+		isStop=false;
 		speedTE=0;
 		clusterTE=0;
 	}
