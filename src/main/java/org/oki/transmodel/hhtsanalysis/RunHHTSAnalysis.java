@@ -205,6 +205,12 @@ public class RunHHTSAnalysis {
 					System.out.println("Completed Round 2 Trip End Processing.  Outputting...");
 					
 					/*
+					 * TODO
+					 * There should probably be a Round 3 Trip End Processing.  It should look at trip lengths 
+					 * between stops and remove trips that are less than 1/4 mile.
+					 */
+					
+					/*
 					 * Tagging stops for an eventual trip table
 					 */
 					
