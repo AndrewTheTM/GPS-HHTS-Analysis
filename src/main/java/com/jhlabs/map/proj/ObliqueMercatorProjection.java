@@ -41,7 +41,7 @@ public class ObliqueMercatorProjection extends CylindricalProjection {
         maxLongitude = Math.toRadians(60);
         minLatitude = Math.toRadians(-80);
         maxLatitude = Math.toRadians(80);
-        alpha = Math.toRadians(-45);//FIXME
+        alpha = Math.toRadians(-45);
         initialize();
     }
 
@@ -62,9 +62,9 @@ public class ObliqueMercatorProjection extends CylindricalProjection {
     public void initialize() {
         super.initialize();
         double con, com, cosphi0, d, f, h, l, sinphi0, p, j;
-        int azi = 1;//FIXME-param
+        int azi = 1;
 
-        //FIXME-setup rot, alpha, longc,lon/lat1/2
+        //
         rot = true;
 
         if (azi != 0) {//alpha specified
@@ -146,11 +146,11 @@ public class ObliqueMercatorProjection extends CylindricalProjection {
         singam = Math.sin(Gamma);
         cosgam = Math.cos(Gamma);
 //		f = MapMath.param(params, "brot_conv").i ? Gamma : alpha;
-        f = alpha;//FIXME
+        f = alpha;
         sinrot = Math.sin(f);
         cosrot = Math.cos(f);
 //		u_0 = MapMath.param(params, "bno_uoff").i ? 0. :
-        u_0 = false ? 0. ://FIXME
+        u_0 = false ? 0. :
                 Math.abs(al * Math.atan(Math.sqrt(d * d - 1.) / cosrot) / bl);
         if (projectionLatitude < 0.) {
             u_0 = -u_0;

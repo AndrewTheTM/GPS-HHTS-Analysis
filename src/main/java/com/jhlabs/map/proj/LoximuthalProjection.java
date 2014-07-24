@@ -34,7 +34,7 @@ public class LoximuthalProjection extends PseudoCylindricalProjection {
     private double tanphi1;
 
     public LoximuthalProjection() {
-        phi1 = Math.toRadians(40.0);//FIXME - param
+        phi1 = Math.toRadians(40.0);//
         cosphi1 = Math.cos(phi1);
         if (cosphi1 < EPS) {
             throw new ProjectionException("-22");

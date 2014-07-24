@@ -142,7 +142,7 @@ public class SimpleConicProjection extends ConicProjection {
                     throw new ProjectionException("-43");
                 }
                 rho_0 = c2 * (c1 - Math.tan(del));
-                maxLatitude = Math.toRadians(60);//FIXME
+                maxLatitude = Math.toRadians(60);
                 break;
             case VITK1:
                 n = (cs = Math.tan(del)) * Math.sin(sig) / del;

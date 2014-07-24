@@ -117,7 +117,7 @@ public class TransverseMercatorProjection extends CylindricalProjection {
             final double cosphi = Math.cos(lpphi);
             double b = cosphi * Math.sin(lplam);
             if (Math.abs(Math.abs(b) - 1.) <= EPS10) {
-                throw new ProjectionException("F_ERROR"); // FIXME F_ERROR macro returns 0/0 and error -20
+                throw new ProjectionException("F_ERROR"); // FIX ME F_ERROR macro returns 0/0 and error -20
             }
 
             xy.x = ml0 * scaleFactor * Math.log((1. + b) / (1. - b));
@@ -125,7 +125,7 @@ public class TransverseMercatorProjection extends CylindricalProjection {
             b = Math.abs(xy.y);
             if (b >= 1.) {
                 if ((b - 1.) > EPS10) {
-                    throw new ProjectionException("F_ERROR"); // FIXME F_ERROR macro returns 0/0 and error -20
+                    throw new ProjectionException("F_ERROR"); // FIX ME F_ERROR macro returns 0/0 and error -20
                 } else {
                     xy.y = 0.;
                 }

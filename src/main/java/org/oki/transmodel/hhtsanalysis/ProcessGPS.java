@@ -74,7 +74,7 @@ public class ProcessGPS implements Callable<GPSData> {
 			if(gpsRecord.timePrior!=0)
 				gpsRecord.velocityPriorFPS=gpsRecord.distPrior/gpsRecord.timePrior; //vFPS Prior
 			
-			gpsRecord.velocityPriorMPH=1.466667*gpsRecord.velocityPriorFPS;
+			gpsRecord.velocityPriorMPH=gpsRecord.velocityPriorFPS/5280*3600;
 		}
 		/*
 		 * Comparisons with next
@@ -99,7 +99,7 @@ public class ProcessGPS implements Callable<GPSData> {
 			if(gpsRecord.timeNext!=0)
 				gpsRecord.velocityNextFPS=gpsRecord.distNext/gpsRecord.timeNext; //vFPS Next
 			
-			gpsRecord.velocityNextMPH=1.466667*gpsRecord.velocityNextFPS;
+			gpsRecord.velocityNextMPH=gpsRecord.velocityNextFPS/5280*3600;
 		}
 		
 		

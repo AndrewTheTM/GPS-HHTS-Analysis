@@ -95,10 +95,10 @@ public class PerspectiveProjection extends Projection {
 	}
 
 	public boolean hasInverse() {
-		return false; // FIXME
+		return false; // 
 	}
 
-/*FIXME
+/*
 INVERSE(s_inverse); /* spheroid * /
 	double  rh, cosz, sinz;
 
@@ -168,7 +168,7 @@ tilt = 0;
 		pfact = (p + 1.) * h;
 		es = 0.;
 	}
-/*FIXME
+/*
 ENTRY0(nsper)
 	tilt = 0;
 ENDENTRY(setup(P))

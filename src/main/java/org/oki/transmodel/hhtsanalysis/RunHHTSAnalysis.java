@@ -181,6 +181,7 @@ public class RunHHTSAnalysis {
 					
 					GPS=newGPSList;
 					newGPSList=new GPSList();
+					
 					eservice = Executors.newFixedThreadPool(nrOfProcessors);
 					futuresList=new ArrayList<Future>();
 					for(int i=0;i<GPS.size();i++)
@@ -204,8 +205,28 @@ public class RunHHTSAnalysis {
 					}
 					System.out.println("Completed Round 2 Trip End Processing.  Outputting...");
 					
+					//TODO: Stop IDs
+					GPS=newGPSList;
+					newGPSList=new GPSList();
+					
+					int stopID=1;
+					boolean lastPointMoving=true;
+					for(GPSData g:GPS){
+						if(!g.isStop){
+							g.stopID=stopID;
+							lastPointMoving=false;
+						}else{
+							if(!lastPointMoving)
+								stopID++;
+							lastPointMoving=true;
+						}
+					}
+				
+					System.out.println("Assigned Stop IDs.");
+					 
+					
 					/*
-					 * TODO
+					 * TODO:
 					 * There should probably be a Round 3 Trip End Processing.  It should look at trip lengths 
 					 * between stops and remove trips that are less than 1/4 mile.
 					 */
@@ -227,9 +248,9 @@ public class RunHHTSAnalysis {
 					 */
 					
 					
-					FileOutputStream fout=new FileOutputStream(workfolder+"\\"+newGPSList.get(0).hhId+"_"+newGPSList.get(0).personId+".obj");
+					FileOutputStream fout=new FileOutputStream(workfolder+"\\"+GPS.get(0).hhId+"_"+GPS.get(0).personId+".obj");
 					ObjectOutputStream oos=new ObjectOutputStream(fout);
-					oos.writeObject(newGPSList);
+					oos.writeObject(GPS);
 					oos.close();
 					GPS.clear();
 					newGPSList.clear();

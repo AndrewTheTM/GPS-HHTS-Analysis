@@ -71,7 +71,7 @@ public class McBrydeThomasFlatPolarSine2Projection extends PseudoCylindricalProj
     }
 
     public boolean isEqualArea() {
-        return true; // FIXME verify if correct.
+        return true; // 
     }
 
     public String toString() {

@@ -65,7 +65,7 @@ public class LagrangeProjection extends Projection {
 		if (rw <= 0)
 			throw new ProjectionException("-27");
 		hrw = 0.5 * (rw = 1. / rw);
-		phi1 = 0; // projectionLatitude1; FIXME
+		phi1 = 0; // projectionLatitude1; 
 		if (Math.abs(Math.abs(phi1 = Math.sin(phi1)) - 1.) < TOL)
 			throw new ProjectionException("-22");
 		a1 = Math.pow((1. - phi1)/(1. + phi1), hrw);

@@ -52,7 +52,7 @@ public class RectangularPolyconicProjection extends Projection {
 
 	public void initialize() { // rpoly
 		super.initialize();
-/*FIXME
+/*
 		if ((mode = (phi1 = Math.abs(pj_param(params, "rlat_ts").f)) > EPS)) {
 			fxb = 0.5 * Math.sin(phi1);
 			fxa = 0.5 / fxb;

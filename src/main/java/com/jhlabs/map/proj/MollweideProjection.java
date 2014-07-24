@@ -28,7 +28,6 @@ import java.awt.geom.*;
 public class MollweideProjection extends PseudoCylindricalProjection {
 
     // Wagner 4 and Wagner 5 should be separated
-    // FIXME
     public static final int MOLLWEIDE = 0;
     public static final int WAGNER4 = 1;
     public static final int WAGNER5 = 2;

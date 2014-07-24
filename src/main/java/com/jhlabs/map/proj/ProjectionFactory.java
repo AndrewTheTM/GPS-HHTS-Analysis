@@ -334,7 +334,7 @@ public class ProjectionFactory {
             try {
                 Projection projection = (Projection) cls.newInstance();
                 if (projection != null) {
-                    projection.setName(name); // is this needed ? FIXME
+                    projection.setName(name); // is this needed ? 
                 }
                 return projection;
             } catch (IllegalAccessException e) {

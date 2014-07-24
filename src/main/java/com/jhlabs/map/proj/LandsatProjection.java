@@ -153,11 +153,11 @@ public class LandsatProjection extends Projection {
 		int land, path;
 		double lam, alf, esc, ess;
 
-//FIXME		land = pj_param(params, "ilsat").i;
+//		land = pj_param(params, "ilsat").i;
 land = 1;
 		if (land <= 0 || land > 5)
 			throw new ProjectionException("-28");
-//FIXME		path = pj_param(params, "ipath").i;
+//		path = pj_param(params, "ipath").i;
 path = 120;
 		if (path <= 0 || path > (land <= 3 ? 251 : 233))
 			throw new ProjectionException("-29");

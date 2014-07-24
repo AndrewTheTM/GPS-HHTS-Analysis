@@ -41,7 +41,7 @@ public class SinusoidalProjection extends PseudoCylindricalProjection {
     }
 
     public double getWidth(double y) {
-        return MapMath.normalizeLongitude(Math.PI) * Math.cos(y); // FIXME
+        return MapMath.normalizeLongitude(Math.PI) * Math.cos(y); // 
     }
 
     public boolean hasInverse() {

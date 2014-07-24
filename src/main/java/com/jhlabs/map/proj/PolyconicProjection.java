@@ -139,7 +139,7 @@ public class PolyconicProjection extends Projection {
 
     public void initialize() {
         super.initialize();
-        spherical = true;//FIXME
+        spherical = true;//
         if (!spherical) {
             en = MapMath.enfn(es);
             if (en == null) {

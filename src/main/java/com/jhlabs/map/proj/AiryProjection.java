@@ -100,8 +100,8 @@ public class AiryProjection extends AzimuthalProjection {
 
 //		no_cut = pj_param(params, "bno_cut").i;
 //		beta = 0.5 * (MapMath.HALFPI - pj_param(params, "rlat_b").f);
-		no_cut = false;//FIXME
-		beta = 0.5 * (MapMath.HALFPI - 0);//FIXME
+		no_cut = false;
+		beta = 0.5 * (MapMath.HALFPI - 0);
 		if (Math.abs(beta) < EPS)
 			Cb = -0.5;
 		else {

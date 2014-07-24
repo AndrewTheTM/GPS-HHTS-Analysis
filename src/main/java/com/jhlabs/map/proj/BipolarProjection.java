@@ -167,7 +167,7 @@ public class BipolarProjection extends Projection {
 
 	public void initialize() { // bipc
 		super.initialize();
-//		noskew = pj_param(params, "bns").i;//FIXME
+//		noskew = pj_param(params, "bns").i;
 	}
 
 	public String toString() {

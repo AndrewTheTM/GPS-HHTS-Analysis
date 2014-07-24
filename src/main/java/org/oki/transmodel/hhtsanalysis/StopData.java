@@ -13,6 +13,10 @@ public class StopData {
 	int LocationID;
 	Period StopDuration;
 	int StopDurationSeconds;
+	double DistToNextStopFt;
+	double DistToNextStopMi;
+	double DistFromPrioStopFt;
+	double DistFromPriorStopMi;
 	
 	
 }
